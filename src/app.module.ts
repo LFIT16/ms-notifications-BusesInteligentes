@@ -5,6 +5,7 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { SuscripcionModule } from './suscripcion/suscripcion.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { MensajeModule } from './mensaje/mensaje.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     FirebaseModule,
     SuscripcionModule,
     NotificacionesModule,
+    MensajeModule,
   ],
 })
 export class AppModule {}
