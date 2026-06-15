@@ -15,12 +15,18 @@ export class NotificacionesService {
     private readonly config: ConfigService,
   ) {}
 
+  // Headers que identifican al ms-notificaciones como servicio interno
+  private get internalHeaders() {
+    return {
+      'x-internal-api-key': this.config.get<string>('INTERNAL_API_KEY'),
+    };
+  }
+
   @Cron('*/30 * * * * *')
   async verificarBusesCercanos() {
     this.logger.log('🔍 CRON ejecutándose a las: ' + new Date().toISOString());
-    
+
     const suscripciones = await this.suscripcionesService.findActivas();
-    
     this.logger.log(`📋 Suscripciones activas encontradas: ${suscripciones.length}`);
 
     if (suscripciones.length === 0) {
@@ -30,8 +36,7 @@ export class NotificacionesService {
 
     for (const sus of suscripciones) {
       this.logger.log(`📍 Procesando suscripción ID: ${sus.id}, Ciudadano: ${sus.ciudadanoId}, Ruta: ${sus.rutaId}, Paradero: ${sus.paraderoId}, Umbral: ${sus.minutosAnticipacion} min`);
-      
-      // Guard: saltar si faltan datos esenciales
+
       if (!sus.fcmToken || sus.id == null) {
         this.logger.warn(`⚠️ Suscripción ${sus.id} sin FCM token, saltando...`);
         continue;
@@ -43,17 +48,23 @@ export class NotificacionesService {
 
         const urlBuses = `${msBusinessUrl}/monitoreo/ruta/${sus.rutaId}/activos`;
         this.logger.log(`🚌 Consultando buses en: ${urlBuses}`);
-        
-        const { data: buses } = await axios.get(urlBuses);
+
+        // ✅ Enviamos la API key interna para pasar el guard
+        const { data: buses } = await axios.get(urlBuses, {
+          headers: this.internalHeaders,
+        });
 
         this.logger.log(`🚌 Buses encontrados para ruta ${sus.rutaId}: ${buses?.length || 0}`);
-
         if (!buses || buses.length === 0) continue;
 
         for (const bus of buses) {
           try {
             const urlEta = `${msBusinessUrl}/monitoreo/bus/${bus.busId}/eta/${sus.paraderoId}`;
-            const { data: eta } = await axios.get(urlEta);
+
+            // ✅ También en la llamada de ETA
+            const { data: eta } = await axios.get(urlEta, {
+              headers: this.internalHeaders,
+            });
 
             const etaMinutos: number | null = eta?.etaMinutos ?? null;
             const umbral = sus.minutosAnticipacion ?? 5;
@@ -67,25 +78,23 @@ export class NotificacionesService {
 
             if (etaMinutos <= umbral && etaMinutos >= 0) {
               this.logger.log(`🚨 ENVIANDO NOTIFICACIÓN para bus ${bus.placa} a ciudadano ${sus.ciudadanoId}`);
-              this.logger.log(`📱 Token FCM: ${sus.fcmToken.substring(0, 20)}...`);
 
               const resultado = await this.firebaseService.enviarNotificacion(
                 sus.fcmToken,
                 `🚌 Tu bus llega en ${etaMinutos} minutos`,
                 `${bus.ruta?.nombre || 'Tu ruta'} — Bus ${bus.placa} llegará a tu paradero pronto.`,
                 {
-                  busId: String(bus.busId),
-                  placa: bus.placa || '',
-                  rutaId: String(sus.rutaId),
+                  busId:      String(bus.busId),
+                  placa:      bus.placa      || '',
+                  rutaId:     String(sus.rutaId),
                   paraderoId: String(sus.paraderoId),
                   etaMinutos: String(etaMinutos),
-                  tipo: 'bus_proximo',
+                  nombreRuta: bus.ruta?.nombre || '',
                 },
               );
 
               if (resultado) {
                 this.logger.log(`✅ Notificación enviada exitosamente para bus ${bus.placa}`);
-                // Desactivar para no spamear
                 await this.suscripcionesService.desactivar(sus.id);
                 this.logger.log(`🔕 Suscripción ${sus.id} desactivada`);
               } else {
@@ -98,7 +107,7 @@ export class NotificacionesService {
           }
         }
       } catch (e) {
-        const error = e as Error;       
+        const error = e as Error;
         this.logger.warn(`Error procesando suscripción ${sus.id}: ${error.message}`);
       }
     }
