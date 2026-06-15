@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { FirebaseModule } from './firebase/firebase.module';
+import { SuscripcionModule } from './suscripcion/suscripcion.module';
+import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -19,6 +24,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         synchronize: false, // Usaremos migraciones
       }),
     }),
+    FirebaseModule,
+    SuscripcionModule,
+    NotificacionesModule,
   ],
 })
 export class AppModule {}
