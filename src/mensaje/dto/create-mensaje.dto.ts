@@ -1,8 +1,10 @@
-import { IsString, MaxLength, IsOptional, IsNumber } from 'class-validator';
+import {
+  IsString, MaxLength, IsOptional, IsNumber,
+} from 'class-validator';
 
 export class CreateMensajeDto {
   @IsString()
-  destinatarioId?: string;
+  destinatarioUsuarioId?: string;
 
   @IsString()
   @MaxLength(500)

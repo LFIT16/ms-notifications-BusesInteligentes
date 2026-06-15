@@ -1,27 +1,19 @@
 import {
   Entity, PrimaryGeneratedColumn, Column,
-  CreateDateColumn,
+  CreateDateColumn, OneToMany, ManyToOne, JoinColumn,
 } from 'typeorm';
+import { DestinatarioPersona } from '../../destinatario-persona/entities/destinatario-persona.entity';
 
 @Entity('mensajes')
 export class Mensaje {
   @PrimaryGeneratedColumn()
   id?: number;
 
-  @Column()
+  @Column({ name: 'emisor_id' })
   emisorId?: string;
-
-  @Column()
-  destinatarioId?: string;
 
   @Column({ length: 500 })
   contenido?: string;
-
-  @Column({ default: false })
-  leido?: boolean;
-
-  @Column({ type: 'datetime', nullable: true })
-  fechaLeido?: Date | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   latitud?: number | null;
@@ -29,6 +21,12 @@ export class Mensaje {
   @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true })
   longitud?: number | null;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'fecha_envio' })
   fechaEnvio?: Date;
+
+  @OneToMany(() => DestinatarioPersona, (dp) => dp.mensaje, {
+    cascade: true,
+    eager: true,
+  })
+  destinatariosPersona?: DestinatarioPersona[];
 }

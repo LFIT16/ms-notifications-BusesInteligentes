@@ -24,10 +24,7 @@ export class NotificacionesService {
 
   @Cron('*/30 * * * * *')
   async verificarBusesCercanos() {
-    this.logger.log('🔍 CRON ejecutándose a las: ' + new Date().toISOString());
-
-    const suscripciones = await this.suscripcionesService.findActivas();
-    this.logger.log(`📋 Suscripciones activas encontradas: ${suscripciones.length}`);
+    const suscripciones = await this.suscripcionesService.findActivas();;
 
     if (suscripciones.length === 0) {
       this.logger.log('⚠️ No hay suscripciones activas, saltando...');
@@ -35,7 +32,6 @@ export class NotificacionesService {
     }
 
     for (const sus of suscripciones) {
-      this.logger.log(`📍 Procesando suscripción ID: ${sus.id}, Ciudadano: ${sus.ciudadanoId}, Ruta: ${sus.rutaId}, Paradero: ${sus.paraderoId}, Umbral: ${sus.minutosAnticipacion} min`);
 
       if (!sus.fcmToken || sus.id == null) {
         this.logger.warn(`⚠️ Suscripción ${sus.id} sin FCM token, saltando...`);
@@ -44,17 +40,14 @@ export class NotificacionesService {
 
       try {
         const msBusinessUrl = this.config.get<string>('MS_BUSINESS') || 'http://localhost:3000';
-        this.logger.log(`🌐 Usando MS_BUSINESS_URL: ${msBusinessUrl}`);
 
         const urlBuses = `${msBusinessUrl}/monitoreo/ruta/${sus.rutaId}/activos`;
-        this.logger.log(`🚌 Consultando buses en: ${urlBuses}`);
 
         // ✅ Enviamos la API key interna para pasar el guard
         const { data: buses } = await axios.get(urlBuses, {
           headers: this.internalHeaders,
         });
 
-        this.logger.log(`🚌 Buses encontrados para ruta ${sus.rutaId}: ${buses?.length || 0}`);
         if (!buses || buses.length === 0) continue;
 
         for (const bus of buses) {

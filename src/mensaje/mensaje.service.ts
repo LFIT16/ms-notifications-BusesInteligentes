@@ -1,66 +1,73 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Mensaje } from './entities/mensaje.entity';
+import { DestinatarioPersona } from '../destinatario-persona/entities/destinatario-persona.entity';
 import { CreateMensajeDto } from './dto/create-mensaje.dto';
 
 @Injectable()
 export class MensajeService {
   constructor(
     @InjectRepository(Mensaje)
-    private readonly repo: Repository<Mensaje>,
+    private readonly mensajeRepo: Repository<Mensaje>,
+    @InjectRepository(DestinatarioPersona)
+    private readonly destPersonaRepo: Repository<DestinatarioPersona>,
   ) {}
 
-  async crear(emisorId: string, dto: CreateMensajeDto): Promise<Mensaje> {
-    const mensaje = this.repo.create({
-      emisorId,
-      destinatarioId: dto.destinatarioId,
+  async crear(emisorUsuarioId: string, dto: CreateMensajeDto): Promise<Mensaje> {
+    const mensaje = this.mensajeRepo.create({
+      emisorId: emisorUsuarioId,
       contenido: dto.contenido,
       latitud: dto.latitud ?? null,
       longitud: dto.longitud ?? null,
-      leido: false,
-      fechaLeido: null,
-    });
-    return this.repo.save(mensaje);
-  }
-
-  async getConversacion(userId1: string, userId2: string): Promise<Mensaje[]> {
-    return this.repo.find({
-      where: [
-        { emisorId: userId1, destinatarioId: userId2 },
-        { emisorId: userId2, destinatarioId: userId1 },
+      destinatariosPersona: [
+        this.destPersonaRepo.create({
+          usuarioId: dto.destinatarioUsuarioId,
+          leido: false,
+          fechaLeido: null,
+        }),
       ],
-      order: { fechaEnvio: 'ASC' },
     });
+    return this.mensajeRepo.save(mensaje);
   }
 
-  async getEnviados(emisorId: string): Promise<Mensaje[]> {
-    return this.repo.find({
-      where: { emisorId },
+  async getEnviados(emisorUsuarioId: string): Promise<Mensaje[]> {
+    return this.mensajeRepo.find({
+      where: { emisorId: emisorUsuarioId },
+      relations: ['destinatariosPersona'],
       order: { fechaEnvio: 'DESC' },
     });
   }
 
-  async getRecibidos(destinatarioId: string): Promise<Mensaje[]> {
-    return this.repo.find({
-      where: { destinatarioId },
-      order: { fechaEnvio: 'DESC' },
+  async getRecibidos(usuarioId: string): Promise<Mensaje[]> {
+  return this.mensajeRepo
+    .createQueryBuilder('m')
+    .innerJoin('m.destinatariosPersona', 'dp')
+    .where('dp.usuarioId = :usuarioId', { usuarioId })
+    .leftJoinAndSelect('m.destinatariosPersona', 'todos')
+    .orderBy('m.fechaEnvio', 'DESC')
+    .getMany();
+}
+
+  async getNoLeidos(usuarioId: string): Promise<number> {
+    return this.destPersonaRepo.count({
+      where: { usuarioId, leido: false },
     });
   }
 
-  async marcarLeido(mensajeId: number, userId: string): Promise<Mensaje | null> {
-    const mensaje = await this.repo.findOne({
-      where: { id: mensajeId, destinatarioId: userId },
+  async marcarLeido(mensajeId: number, usuarioId: string): Promise<DestinatarioPersona> {
+    const dest = await this.destPersonaRepo.findOne({
+      where: { mensajeId, usuarioId },
     });
-    if (!mensaje) return null;
-    mensaje.leido = true;
-    mensaje.fechaLeido = new Date();
-    return this.repo.save(mensaje);
+    if (!dest) throw new NotFoundException('Destinatario no encontrado');
+    dest.leido = true;
+    dest.fechaLeido = new Date();
+    return this.destPersonaRepo.save(dest);
   }
 
-  async getNoLeidos(destinatarioId: string): Promise<number> {
-    return this.repo.count({
-      where: { destinatarioId, leido: false },
-    });
+  async getDestinatariosUsuarioId(mensajeId: number): Promise<string[]> {
+    const dests = await this.destPersonaRepo.find({ where: { mensajeId } });
+    return dests.map((d) => d.usuarioId).filter((id): id is string => !!id);
   }
+  
 }

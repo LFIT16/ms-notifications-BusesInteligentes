@@ -1,7 +1,4 @@
-import {
-  Controller, Get, Post, Body,
-  Param, Patch,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch } from '@nestjs/common';
 import { MensajeService } from './mensaje.service';
 import { CreateMensajeDto } from './dto/create-mensaje.dto';
 
@@ -9,42 +6,34 @@ import { CreateMensajeDto } from './dto/create-mensaje.dto';
 export class MensajeController {
   constructor(private readonly service: MensajeService) {}
 
-  @Post(':emisorId')
+  @Post(':emisorUsuarioId')
   crear(
-    @Param('emisorId') emisorId: string,
+    @Param('emisorUsuarioId') emisorUsuarioId: string,
     @Body() dto: CreateMensajeDto,
   ) {
-    return this.service.crear(emisorId, dto);
+    return this.service.crear(emisorUsuarioId, dto);
   }
 
-  @Get('conversacion/:userId1/:userId2')
-  conversacion(
-    @Param('userId1') userId1: string,
-    @Param('userId2') userId2: string,
-  ) {
-    return this.service.getConversacion(userId1, userId2);
+  @Get('enviados/:usuarioId')
+  enviados(@Param('usuarioId') usuarioId: string) {
+    return this.service.getEnviados(usuarioId);
   }
 
-  @Get('enviados/:emisorId')
-  enviados(@Param('emisorId') emisorId: string) {
-    return this.service.getEnviados(emisorId);
+  @Get('recibidos/:usuarioId')
+  recibidos(@Param('usuarioId') usuarioId: string) {
+    return this.service.getRecibidos(usuarioId);
   }
 
-  @Get('recibidos/:destinatarioId')
-  recibidos(@Param('destinatarioId') destinatarioId: string) {
-    return this.service.getRecibidos(destinatarioId);
+  @Get('no-leidos/:usuarioId')
+  noLeidos(@Param('usuarioId') usuarioId: string) {
+    return this.service.getNoLeidos(usuarioId);
   }
 
-  @Get('no-leidos/:destinatarioId')
-  noLeidos(@Param('destinatarioId') destinatarioId: string) {
-    return this.service.getNoLeidos(destinatarioId);
-  }
-
-  @Patch('leer/:mensajeId/:userId')
+  @Patch('leer/:mensajeId/:usuarioId')
   marcarLeido(
     @Param('mensajeId') mensajeId: string,
-    @Param('userId') userId: string,
+    @Param('usuarioId') usuarioId: string,
   ) {
-    return this.service.marcarLeido(Number(mensajeId), userId);
+    return this.service.marcarLeido(Number(mensajeId), usuarioId);
   }
 }
