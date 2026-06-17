@@ -25,6 +25,10 @@ import { NotificacionesGrupoModule } from './notificaciones-grupo/notificaciones
         synchronize: false,
       }),
     }),
+    FirebaseModule,
+    NotificacionesMonitoreoModule,
+    SuscripcionModule,
+    NotificacionesGrupoModule,
   ],
 })
 export class AppModule {}

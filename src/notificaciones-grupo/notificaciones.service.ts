@@ -67,21 +67,23 @@ export class NotificacionesService {
     nombreEmisor: string;
     mensajeId: number;
     destinatarios: string[];
-  }) {
-    const notificaciones: Notificacion[] = [];
-    for (const usuarioId of dto.destinatarios) {
-      if (usuarioId === dto.emisorId) continue;
-      notificaciones.push(await this.notificacionRepo.save(this.notificacionRepo.create({
-        usuarioId,
-        tipo:         TipoNotificacion.NUEVO_MENSAJE,
-        titulo:       `Nuevo mensaje de ${dto.nombreEmisor}`,
-        mensaje:      `Tienes un nuevo mensaje en el grupo #${dto.grupoId}`,
-        referenciaId: dto.grupoId,
-        leido:        false,
-      })));
-    }
-    return notificaciones;
+      contenido?: string;        
+
+ }) {
+  const notificaciones: Notificacion[] = [];
+  for (const usuarioId of dto.destinatarios) {
+    if (usuarioId === dto.emisorId) continue;
+    notificaciones.push(await this.notificacionRepo.save(this.notificacionRepo.create({
+      usuarioId,
+      tipo:         TipoNotificacion.NUEVO_MENSAJE,
+      titulo:       `Nuevo mensaje de ${dto.nombreEmisor}`,
+      mensaje:      dto.contenido ?? `Nuevo mensaje en el grupo #${dto.grupoId}`, // ← CAMBIAR
+      referenciaId: dto.grupoId,
+      leido:        false,
+    })));
   }
+  return notificaciones;
+}
 
   // HU-ENTR-3-008: Alerta masiva
   async notificarAlertaMasiva(dto: {
