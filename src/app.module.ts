@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FirebaseModule } from './firebase/firebase.module';
-import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { NotificacionesModule } from './notificaciones-monitoreo/notificaciones.module';
 import { SuscripcionModule } from './suscripcion/suscripcion.module';
 
 @Module({
