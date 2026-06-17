@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FirebaseModule } from './firebase/firebase.module';
-import { SuscripcionModule } from './suscripcion/suscripcion.module';
 import { NotificacionesModule } from './notificaciones/notificaciones.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { MensajeModule } from './mensaje/mensaje.module';
+import { SuscripcionModule } from './suscripcion/suscripcion.module';
 
 @Module({
   imports: [
@@ -28,7 +27,6 @@ import { MensajeModule } from './mensaje/mensaje.module';
     FirebaseModule,
     SuscripcionModule,
     NotificacionesModule,
-    MensajeModule,
   ],
 })
 export class AppModule {}
