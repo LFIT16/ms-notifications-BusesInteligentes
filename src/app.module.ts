@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { NotificacionesModule } from './notificaciones/notificaciones.module';
+import { NotificacionesModule } from './notificaciones-grupo/notificaciones.module';
 
 @Module({
   imports: [
