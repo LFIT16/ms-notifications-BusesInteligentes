@@ -10,4 +10,4 @@ import { Notificacion } from './entities/notificacion.entity';
   providers: [NotificacionesService],
   exports: [NotificacionesService],
 })
-export class NotificacionesModule {}
+export class NotificacionesGrupoModule {}
