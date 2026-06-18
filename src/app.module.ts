@@ -3,9 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FirebaseModule } from './firebase/firebase.module';
-import { NotificacionesMonitoreoModule } from './notificaciones-monitoreo/notificaciones.module';
+import { NotificacionesMonitoreoModule } from './notificaciones-monitoreo/notificaciones-monitoreo.module';
 import { SuscripcionModule } from './suscripcion/suscripcion.module';
-import { NotificacionesGrupoModule } from './notificaciones-grupo/notificaciones.module';
+import { NotificacionesGrupoModule } from './notificaciones-grupo/notificaciones-grupo.module';
 
 @Module({
   imports: [
@@ -25,6 +25,9 @@ import { NotificacionesGrupoModule } from './notificaciones-grupo/notificaciones
         synchronize: false,
       }),
     }),
+    NotificacionesMonitoreoModule,
+    SuscripcionModule,
+    NotificacionesGrupoModule,  
   ],
 })
 export class AppModule {}
